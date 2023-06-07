@@ -43,8 +43,9 @@ func Ap[A, B any](ma IO[A]) func(IO[func(A) B]) IO[B] {
 	}
 }
 
-// FlatMap computes two side effects in sequence, both side effects are executed on the current goroutine
-func FlatMap[A, B any](f func(A) IO[B]) func(ma IO[A]) IO[B] {
+// Chain computes two side effects in sequence, both side effects are executed on the current goroutine
+// this function is sometimes referred to as `FlatMap`
+func Chain[A, B any](f func(A) IO[B]) func(ma IO[A]) IO[B] {
 	return func(ma IO[A]) IO[B] {
 		return func() B {
 			return f(ma())()
@@ -59,4 +60,13 @@ func Map[A, B any](f func(A) B) func(ma IO[A]) IO[B] {
 			return f(ma())
 		}
 	}
+}
+
+// Chain computes two side effects in sequence, but it returns the value of the first
+func ChainFirst[A, B any](f func(A) IO[B]) func(ma IO[A]) IO[A] {
+	return Chain(func(a A) IO[A] {
+		return Map(func(b B) A {
+			return a
+		})(f(a))
+	})
 }
